@@ -87,26 +87,6 @@ server, which supplies the device data Apple's sign-in requires and never sees y
 - Repository choice and build history: `UserSettings/IosCloudBuild.asset`, which Unity keeps out
   of version control, so teammates never share your repository or accounts.
 
-## Help screenshots
-
-Put `<page>-<step>.png` files in `Editor/HelpImages/` (pages: `connect`, `install`,
-`devmode`, `trust`, `expired`), and the Help tab shows each under its step.
-
-## Releasing a new version
-
-1. Update `version` in `package.json` and add a `CHANGELOG.md` entry.
-2. If `Helper~` changed: push, open the **sideload-helper** workflow run, download its artifact,
-   and commit it as `Editor/Bin/sideload-helper.exe`. The run summary lists the SHA-256 of the built
-   and the committed exe; they match when the committed one came from CI.
-3. Run `Tools~/Build-UnityPackage.ps1`. It compiles the tool in a clean Unity project and writes
-   `Builds~/MacLessBuilder-<version>.unitypackage`.
-4. Tag the commit `v<version>`, push the tag, and attach the .unitypackage to a GitHub release for
-   that tag.
-
-To build the helper locally instead: install Rust with the MSVC toolchain and Visual Studio's
-C++ build tools, then `cargo build --release` in `Helper~`. isideload is pinned to a commit in
-`Helper~/Cargo.toml`; update the `rev` deliberately, since Apple's private endpoints change.
-
 ## License
 
 MIT, see [LICENSE.md](LICENSE.md). The helper includes third-party code under other licenses,
