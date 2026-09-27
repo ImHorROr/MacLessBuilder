@@ -1,0 +1,22 @@
+[package]
+name = "sideload-helper"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+description = "Signs an IPA with a free Apple ID and installs it over USB, for the MacLess Builder Unity tool."
+
+[dependencies]
+# Pinned to a commit: isideload talks to Apple's private endpoints, so updates are taken deliberately.
+isideload = { git = "https://github.com/nab138/isideload", rev = "52b504c2cd706a9e415109b0be9e137168034f5e" }
+idevice = { version = "0.1.61", default-features = false, features = ["usbmuxd", "ring"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+tokio = { version = "1.40", features = ["rt-multi-thread", "macros"] }
+rootcause = "0.12"
+serde_json = "1"
+tracing-subscriber = "0.3"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1

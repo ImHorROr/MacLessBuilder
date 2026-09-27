@@ -1,0 +1,51 @@
+# macless-builder v1 (managed by the MacLess Builder Unity tool; edits may be overwritten on upgrade)
+name: ios-build
+run-name: ios-build ${{ inputs.request_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      asset_name: { required: true, type: string }
+      request_id: { required: true, type: string }
+      use_pods: { required: false, type: boolean, default: false }
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - name: Download Xcode project
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSET_NAME: ${{ inputs.asset_name }}
+        run: |
+          gh release download ios-build-input -R "$GITHUB_REPOSITORY" -p "$ASSET_NAME" -O xcode.zip
+          unzip -q xcode.zip -d xcode
+          # Zips made on Windows carry no Unix execute bits, which Unity's build-phase tools need.
+          chmod -R u+x xcode
+          echo "PROJ_DIR=$(dirname "$(find xcode -maxdepth 3 -name Unity-iPhone.xcodeproj | head -1)")" >> "$GITHUB_ENV"
+
+      - name: Install CocoaPods dependencies
+        if: ${{ inputs.use_pods }}
+        working-directory: ${{ env.PROJ_DIR }}
+        run: pod install
+
+      - name: Build unsigned app
+        working-directory: ${{ env.PROJ_DIR }}
+        run: |
+          if [ -d Unity-iPhone.xcworkspace ]; then SRC="-workspace Unity-iPhone.xcworkspace"; else SRC="-project Unity-iPhone.xcodeproj"; fi
+          xcodebuild $SRC -scheme Unity-iPhone -configuration Debug -sdk iphoneos \
+            -derivedDataPath "$GITHUB_WORKSPACE/out" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+
+      - name: Package IPA
+        run: |
+          mkdir Payload
+          cp -R out/Build/Products/Debug-iphoneos/*.app Payload/
+          zip -qr game.ipa Payload
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ios-ipa
+          path: game.ipa
+          retention-days: 1

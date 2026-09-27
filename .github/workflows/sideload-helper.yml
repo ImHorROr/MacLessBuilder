@@ -1,0 +1,38 @@
+# Builds sideload-helper.exe from Helper~ in public CI, so anyone can check that the committed exe
+# comes from the source in this repository: the run summary shows both SHA-256 hashes.
+name: sideload-helper
+
+on:
+  push:
+    paths:
+      - "Helper~/**"
+      - ".github/workflows/sideload-helper.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build
+        working-directory: Helper~
+        run: cargo build --release --locked
+
+      - name: Compare with the committed exe
+        shell: pwsh
+        run: |
+          $built = (Get-FileHash "Helper~/target/release/sideload-helper.exe" -Algorithm SHA256).Hash.ToLower()
+          $committed = (Get-FileHash "Editor/Bin/sideload-helper.exe" -Algorithm SHA256).Hash.ToLower()
+          "| exe | SHA-256 |" >> $env:GITHUB_STEP_SUMMARY
+          "| --- | --- |" >> $env:GITHUB_STEP_SUMMARY
+          "| Built by this run | ``$built`` |" >> $env:GITHUB_STEP_SUMMARY
+          "| Committed in Editor/Bin | ``$committed`` |" >> $env:GITHUB_STEP_SUMMARY
+          if ($built -ne $committed) {
+            "::warning::The committed sideload-helper.exe is not this run's build. To release, download the artifact and commit it as Editor/Bin/sideload-helper.exe."
+          }
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: sideload-helper
+          path: Helper~/target/release/sideload-helper.exe
