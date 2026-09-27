@@ -23,7 +23,7 @@ $target = Join-Path $work 'Assets\HorrorTools\MacLessBuilder'
 New-Item -ItemType Directory -Force $target | Out-Null
 
 # Unity never imports ~ or dot folders; the Rust source and CI files ship in the repository instead.
-robocopy $root $target /E /NFL /NDL /NJH /NJS /XD 'Helper~' 'Tools~' 'Builds~' '.github' '.git' | Out-Null
+robocopy $root $target /E /NFL /NDL /NJH /NJS /XD 'Helper~' 'Tools~' 'Documentation~' 'Builds~' '.github' '.git' | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE." }
 
 $outDir = Join-Path $root 'Builds~'
