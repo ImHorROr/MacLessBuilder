@@ -50,3 +50,5 @@ if ($process.ExitCode -ne 0 -or -not (Test-Path $out)) {
 }
 
 Write-Host "Built $out ($([math]::Round((Get-Item $out).Length / 1MB, 1)) MB)"
+
+exit 0
